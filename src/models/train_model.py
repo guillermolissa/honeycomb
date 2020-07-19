@@ -165,12 +165,17 @@ def run(kind, model, folds, metric):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument( "--kind",   type=str )
-    parser.add_argument( "--model",	 type=str )
-    parser.add_argument( "--folds",  type=int )
-    parser.add_argument( "--metric", type=str )
-    args = parser.parse_args()
+    parser.add_argument( "--kind",   required=True, 
+        help="Specify if problem will be a classification or regression. Values: 'classification' or 'regression'", type=str )
+    parser.add_argument( "--model",	 required=True, 
+        help="Select kind of model to be used to train from model_dispatcher. Ex: 'rf' equal to Random Forest", type=str )
+    parser.add_argument( "--folds",  
+        help="Number of folds to be used in order to implement Cross Validation. This arg must be provided only if you are using classification, for regression problems, folds must be done using time split methods.", required=False, type=int )
+    parser.add_argument( "--metric", 
+        help="Metric that will be used to validate the performance of the model. Values must be provided from metric_dispatcher. Ex: 'accuracy'", required=True, type=str )
+    args = vars(parser.parse_args())
+    
 
-    assert args.kind not in ['classification', 'regression'], "'kind' should be 'classification' or 'regression'."
-
-    run(kind=args.kind, model=args.model, folds=args.folds, metric=args.metric)
+    assert args['kind'] in ['classification', 'regression'], f"'kind' should be 'classification' or 'regression'. {args['kind']} was provided"
+    
+    run(kind=args['kind'], model=args['model'], folds=args['folds'], metric=args['metric'])
