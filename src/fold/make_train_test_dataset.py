@@ -34,9 +34,16 @@ def save_and_split_data(X,y):
     y_test.shape
 
     X_train.to_pickle(config.OUTPUT_PATH + 'X_train.pkl')
+    del X_train
+
     X_test.to_pickle(config.OUTPUT_PATH + 'X_test.pkl')
+    del X_test
+
     y_train.to_pickle(config.OUTPUT_PATH + 'y_train.pkl')
+    del y_train
+
     y_test.to_pickle(config.OUTPUT_PATH + 'y_test.pkl')
+    del y_test
 
     return 0
     
