@@ -1,6 +1,6 @@
 # config.py
-INPUT_PATH = "../../data/features"
-OUTPUT_PATH = "../../data/train_test"
+INPUT_PATH = "../../data/features/"
+OUTPUT_PATH = "../../data/train_test/"
 NJOBS = -1
 VERBOSE = 1
 PLOT = False
