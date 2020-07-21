@@ -38,12 +38,11 @@ def build_features(data):
     # put here what you think is needed to build features 
     # from your processed data
     # Ex: 
-    features = data.copy()
-    for cat in config.cat_features:
-        le = LabelEncoder()
-        le.fit(list(data[cat].unique()))
-        features[cat] = le.transform(data[cat])
-
+    # features = data.copy()
+    #for cat in config.cat_features:
+    #    le = LabelEncoder()
+    #    le.fit(list(data[cat].unique()))
+    #    features[cat] = le.transform(data[cat])
     #features = preprocessor.fit_transform(data)
     #features = pd.DataFrame(data=features)
     # ****************************************************** #
