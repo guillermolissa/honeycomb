@@ -4,6 +4,7 @@ import os
 import pandas as pd
 from sklearn.metrics import auc
 from sklearn.metrics import plot_roc_curve
+from sklearn.metrics import make_scorer
 import matplotlib.pyplot as plt
 from numpy import mean
 from numpy import std
@@ -16,23 +17,19 @@ from time import time
 import config
 import model_dispatcher
 import metric_dispatcher
-from plot_model import plot_roc_cv
+#from plot_model import plot_roc_cv
 
 # load datasets
 def load_data(kind):
     
     if kind == 'classification':
         # read the training data
-        X_train =  pickle.load(open( f'{config.INPUT_PATH}/X_train.pkl', "rb" )) 
-        y_train = pickle.load(open( f'{config.INPUT_PATH}/Y_train.pkl', "rb" ))
-
-        # read validation data
-        X_val = pickle.load(open( f'{config.INPUT_PATH}/X_val.pkl', "rb" )) 
-        y_val = pickle.load(open( f'{config.INPUT_PATH}/Y_val.pkl', "rb" )) 
+        X_train =  pickle.load(open( f'{config.INPUT_PATH}X_train.pkl', "rb" )) 
+        y_train = pickle.load(open( f'{config.INPUT_PATH}y_train.pkl', "rb" ))
 
         # read test data
-        X_test = pickle.load(open( f'{config.INPUT_PATH}/X_test.pkl', "rb" )) 
-        y_test = pickle.load(open( f'{config.INPUT_PATH}/Y_test.pkl', "rb" )) 
+        X_test = pickle.load(open( f'{config.INPUT_PATH}X_test.pkl', "rb" )) 
+        y_test = pickle.load(open( f'{config.INPUT_PATH}y_test.pkl', "rb" )) 
 
         return X_train, y_train, X_test, y_test
 
@@ -40,17 +37,17 @@ def load_data(kind):
         # kind equal to regression
         
         # read the training data
-        X_train =  pickle.load(open( f'{config.INPUT_PATH}/X_train.pkl', "rb" )) 
-        y_train = pickle.load(open( f'{config.INPUT_PATH}/Y_train.pkl', "rb" ))
+        X_train =  pickle.load(open( f'{config.INPUT_PATH}X_train.pkl', "rb" )) 
+        y_train = pickle.load(open( f'{config.INPUT_PATH}y_train.pkl', "rb" ))
 
         # read validation data
-        X_val = pickle.load(open( f'{config.INPUT_PATH}/X_val.pkl', "rb" )) 
-        y_val = pickle.load(open( f'{config.INPUT_PATH}/Y_val.pkl', "rb" )) 
+        X_val = pickle.load(open( f'{config.INPUT_PATH}X_val.pkl', "rb" )) 
+        y_val = pickle.load(open( f'{config.INPUT_PATH}y_val.pkl', "rb" )) 
 
 
         # read test data
-        X_test = pickle.load(open( f'{config.INPUT_PATH}/X_test.pkl', "rb" )) 
-        y_test = pickle.load(open( f'{config.INPUT_PATH}/Y_test.pkl', "rb" )) 
+        X_test = pickle.load(open( f'{config.INPUT_PATH}X_test.pkl', "rb" )) 
+        y_test = pickle.load(open( f'{config.INPUT_PATH}y_test.pkl', "rb" )) 
 
         return X_train, y_train, X_val, y_val, X_test, y_test
 
@@ -63,12 +60,12 @@ def cv_classification(model, metric, folds, X, y, plot_roc=False):
 
     metricfun = metric_dispatcher.metrics_score[metric]
 
-    if (plot_roc & metric=='roc_auc'):
+    if plot_roc and metric=='roc_auc':
 
         plot_roc_curve_cv(model, X, y, cv)
     
     else:
-        cvscores = cross_val_score(model, X, y, scoring=metricfun, cv=cv, n_jobs=config.NJOBS, error_score='raise', verbose=config.VERBOSE)
+        cvscores = cross_val_score(model, X, y, scoring=make_scorer(metricfun, greater_is_better=True), cv=cv, n_jobs=config.NJOBS, error_score='raise', verbose=config.VERBOSE)
     
     return cvscores
 
