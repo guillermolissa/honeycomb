@@ -10,8 +10,8 @@ import pickle
 import config
 
 # Add here whatever lib you need in order to build features
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import LabelEncoder
+
 
 # LOAD DATASET
 def load_data(input_file):
@@ -37,10 +37,15 @@ def build_features(data):
     # ****************************************************** # 
     # put here what you think is needed to build features 
     # from your processed data
-    # Ex: preprocessor = ColumnTransformer([("numerical", "passthrough", config.num_features), 
-    #                              ("categorical", OneHotEncoder(sparse=False, handle_unknown="ignore"),
-    #                               config.cat_features)])
-    # features = preprocessor.fit_transform(data)
+    # Ex: 
+    features = data.copy()
+    for cat in config.cat_features:
+        le = LabelEncoder()
+        le.fit(list(data[cat].unique()))
+        features[cat] = le.transform(data[cat])
+
+    #features = preprocessor.fit_transform(data)
+    #features = pd.DataFrame(data=features)
     # ****************************************************** #
 
     return features
