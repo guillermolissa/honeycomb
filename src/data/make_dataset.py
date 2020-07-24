@@ -64,11 +64,6 @@ if __name__ == "__main__":
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
 
-    # not used in this stub but often useful for finding various files
-    project_dir = Path(__file__).resolve().parents[2]
-    print("project_dir: ", project_dir) # quitar
-
-
     parser = argparse.ArgumentParser()
     parser.add_argument( "--input_file",   required=True, 
         help="Specify file name without extension from raw folder to be processed.", type=str)
