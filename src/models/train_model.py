@@ -1,6 +1,8 @@
 # train_model.py
 import argparse 
 import os
+import logging
+import warnings
 import pandas as pd
 from sklearn.metrics import auc
 from sklearn.metrics import plot_roc_curve
@@ -17,6 +19,7 @@ from time import time
 import config
 import model_dispatcher
 import metric_dispatcher
+warnings.filterwarnings("ignore")
 #from plot_model import plot_roc_cv
 
 # load datasets
@@ -136,21 +139,21 @@ def run_regression(model, X_train_vector, Y_train_vector, X_val_vector, Y_val_ve
 
 
 def run(kind, model, folds, metric):
+    logger = logging.getLogger(__name__)
+    logger.info(f'INIT: train {kind} model')
 
-   
-
-    if kind == 'classification':   
-        
+    if kind == 'classification':
         # load train and validation datasets
         X_train, y_train, X_test, y_test = load_data(kind)   
 
         # fetch the model from model_dispatcher
         clf = model_dispatcher.models[model]
         
-
+        logger.info(f'RUN: training model: {model}')
         cv_scores = cv_classification(model=clf, metric=metric, folds=folds, X=X_train, y=y_train, plot_roc=config.PLOT) 
+        logger.info(f'RESULT: {metric} - mean %.3f - std (%.3f)' % (mean(cv_scores), std(cv_scores)))
 
-        print(f'{metric}: %.3f (%.3f)' % (mean(cv_scores), std(cv_scores)))
+        logger.info('END: train model' )
        
 
         pass
@@ -161,6 +164,9 @@ def run(kind, model, folds, metric):
 
 
 if __name__ == "__main__":
+    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level=logging.INFO, format=log_fmt)
+
     parser = argparse.ArgumentParser()
     parser.add_argument( "--kind",   required=True, 
         help="Specify if problem will be a classification or regression. Values: 'classification' or 'regression'", type=str )
