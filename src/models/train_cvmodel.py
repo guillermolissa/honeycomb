@@ -1,4 +1,7 @@
-# train_model.py
+# train_cvmodel.py
+# desc: train and validate model using CV
+# @autor: glissa
+# created: 2021/01/06
 import argparse 
 import os
 import logging
@@ -58,12 +61,8 @@ def load_data(kind):
 
 def train_classif_model(model, metric, folds, X, y, plot_roc=False):
 
-    cvscores = []
-    #cv = StratifiedKFold(n_splits=folds, random_state=config.SEED)
-
     metricfun = metric_dispatcher.metrics_score[metric]
 
-    #cvscores = cross_val_score(model, X, y, scoring=make_scorer(metricfun, greater_is_better=True), cv=folds, n_jobs=config.NJOBS, error_score='raise', verbose=config.VERBOSE)
     cvresult = cross_validate(model, X, y, scoring=make_scorer(metricfun, greater_is_better=True), cv=folds, n_jobs=config.NJOBS, error_score='raise', verbose=config.VERBOSE, return_estimator=True)
 
     return cvresult
@@ -84,11 +83,9 @@ def test_classif_model(cv_models, metric, X_test, y_test):
     
     pass
 
-
 def save_models(model_vector,model_name):
     pickle.dump(model_vector, open(f'{config.MODEL_PATH}/{model_name}.bin', 'wb'))
     return 0
-    pass
 
 def run_regression(model, X_train_vector, Y_train_vector, X_val_vector, Y_val_vector):
 
@@ -134,7 +131,7 @@ def run_regression(model, X_train_vector, Y_train_vector, X_val_vector, Y_val_ve
 
 def run(kind, model, folds, metric):
     logger = logging.getLogger(__name__)
-    logger.info(f'INIT: train {kind} model')
+    logger.info(f'INIT: train CV {kind} model')
 
     if kind == 'classification':
         # load train and validation datasets
@@ -143,13 +140,13 @@ def run(kind, model, folds, metric):
         # fetch the model from model_dispatcher
         clf = model_dispatcher.models[model]
         
-        logger.info(f'RUN: training cv model: {model}')
+        logger.info(f'RUN: training cv model - {model}')
         cv_result = train_classif_model(model=clf, metric=metric, folds=folds, X=X_train, y=y_train, plot_roc=config.PLOT) 
         
         # get test score result
         cv_scores = cv_result[f"test_score"]
 
-        logger.info(f'CV RESULT: {metric} - mean %.3f - std (%.3f)' % (mean(cv_scores), std(cv_scores)))
+        logger.info(f'RUN: CV result - {metric} - mean %.3f - std (%.3f)' % (mean(cv_scores), std(cv_scores)))
 
         # get list of estimators 
         cv_models = cv_result['estimator']
@@ -157,15 +154,15 @@ def run(kind, model, folds, metric):
         cv_test_result = test_classif_model(cv_models, metric, X_test, y_test)    
 
 
-        logger.info(f'TEST CV RESULT: {metric} - mean %.3f - std (%.3f)' % (mean(cv_test_result), std(cv_test_result)))
+        logger.info(f'RUN: test CV result - {metric} - mean %.3f - std (%.3f)' % (mean(cv_test_result), std(cv_test_result)))
 
 
-        # saving final model
-        save_models(cv_models, model)
-
-        logger.info(f'SAVE MODEL: {model}' )
-
-        logger.info('END: train cv model' )
+        # saving final models
+        if config.SAVE_MODEL:
+            save_models(cv_models, model)
+            logger.info(f'RUN: save model - {model}' )
+        
+        logger.info(f'END: train CV {kind} model' )
        
 
         pass
@@ -182,7 +179,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument( "--kind",   required=True, 
         help="Specify if problem will be a classification or regression. Values: 'classification' or 'regression'", type=str )
-    parser.add_argument( "--model",	 required=True, 
+    parser.add_argument( "--model",  required=True, 
         help="Select kind of model to be used to train from model_dispatcher. Ex: 'rf' equal to Random Forest", type=str )
     parser.add_argument( "--folds",  
         help="Number of folds to be used in order to implement Cross Validation. This arg must be provided only if you are using classification, for regression problems, folds must be done using time split methods.", required=False, type=int )
