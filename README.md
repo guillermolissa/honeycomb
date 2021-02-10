@@ -27,8 +27,13 @@ Project Organization
     │
     ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
     │                         generated with `pip freeze > requirements.txt`
+    │ 
+    ├── notebooks          <- Jupyter notebooks (Source code for use in this project)
+    │    │
+    │    └── visualization  <- Scripts to create exploratory and results oriented
     │
-    └── notebooks          <- Jupyter notebooks (Source code for use in this project)
+    └── src               <- Jupyter notebooks (Source code for use in this project)
+        │
         ├── __init__.py    <- Makes src a Python module
         │
         ├── data           <- Scripts to download or generate data
@@ -39,16 +44,23 @@ Project Organization
         │
         ├── models         <- Scripts to train models and then use trained models to make
         │   │                 predictions
-        │   ├── xgboost    <-
+        │   ├── run.sh     <- bash script where train and test experiment are setted up
         │   │
         │   │
-        │   └── lgb        <- 
-        │   └── knn        <-
-        │   └── rf         <-
-        │   └── idt        <-
+        │   ├── train_model.py    <-
+        │   │ 
+        │   ├── predict_model.py  <-
+        │   │
+        │   ├── train_cvmodel.py  <-
+	│   │
+        │   ├── random_search.py  <-
+        │   │
+        │   ├── metric_dispatcher.py <-
+        │   │
+        │   └── model_dispatcher.py  <-
         │
         │
-        └── visualization  <- Scripts to create exploratory and results oriented 
+        └── fold  <- Scripts to create folds from datasets 
 
 --------
 
