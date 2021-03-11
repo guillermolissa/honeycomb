@@ -14,7 +14,8 @@ import config
 import gc
 import os
 from google.cloud import storage
-
+from joblib import Parallel, delayed
+import multiprocessing
 
 # REDUCE MEMORY USAGE
 def reduce_mem_usage(df, verbose=False):
@@ -68,23 +69,6 @@ def save_data(output_file, data):
     return 0
 
 # =====================  FUNCTIONS TO BUILD COMMON FEATURES  ==================== #
-
-# replace outliers with a default value
-# @data: imput dataset
-# @attrs: what variables want to trim their outlier's values
-# @return: same dataset from imput without outliers 
-def trim_outliers(data, attrs, params=None):
-    for x in attrs:
-        q75,q25 = np.percentile(data.loc[:,x],[75,25])
-        intr_qr = q75-q25
-    
-        max = q75+(1.5*intr_qr)
-        min = q25-(1.5*intr_qr)
-    
-        data.loc[data[x] < min,x] = min
-        data.loc[data[x] > max,x] = max
-    
-    return data
 
 
 # GET SIMPLE STATISTICS VALUES
@@ -202,3 +186,85 @@ def make_cat_woe(X, y, attrs, prefix_sep='woe_', params=None):
     new_attrs = _data.columns.tolist()
 
     return _data, new_attrs, woe
+
+
+def apply_parallel(data_grouped, func):
+    retLst = Parallel(n_jobs=multiprocessing.cpu_count())(delayed(func)(group) for name, group in data_grouped)
+    return pd.concat(retLst)
+
+
+def make_numeric_feateng(df):
+    feateng_vector = []
+
+    for p in [1, 3, 6]:
+        
+        df_tmp =df.apply(
+            lambda x: x.diff(p)
+        )
+        
+        df_tmp.columns = [c + f"_diff_p{p}" for c in df_tmp.columns]
+        
+        feateng_vector.append(df_tmp)
+
+
+    # Moving sum 
+    for window in [3, 6, 9, 12]:
+        
+        df_tmp = df.apply(
+            lambda x: x.rolling(window).sum(skipna=True)
+        )
+        df_tmp.columns = [c + f"_diff_p{window}" for c in df_tmp.columns]
+        feateng_vector.append(df_tmp)
+    
+
+    # Moving average
+    for window in [3, 6, 9, 12]:
+
+        df_tmp = df.apply(
+            lambda x: x.rolling(window, min_periods = 1).mean(skipna=True)
+        )
+        df_tmp.columns = [c + f"_avg_p{window}" for c in df_tmp.columns]
+        feateng_vector.append(df_tmp)
+
+
+    # Rolling Max 
+    for window in [3, 6, 9, 12]:
+
+        df_tmp = df.apply(
+            lambda x: x.rolling(window, min_periods = 1).max(skipna=True)
+        )
+        df_tmp.columns = [c + f"_max_p{window}" for c in df_tmp.columns]
+        feateng_vector.append(df_tmp) 
+
+
+    # Rolling Min 
+    for window in [3, 6, 9, 12]:
+
+        df_tmp = df.apply(
+            lambda x: x.rolling(window, min_periods = 1).min(skipna=True)
+        )
+        df_tmp.columns = [c + f"_min_p{window}" for c in df_tmp.columns]
+        feateng_vector.append(df_tmp) 
+
+
+    # Rolling Std 
+    for window in [3, 6, 9, 12]:
+
+        df_tmp = df.apply(
+            lambda x: x.rolling(window, min_periods = 1).std(skipna=True)
+        )
+        df_tmp.columns = [c + f"_std_p{window}" for c in df_tmp.columns]
+        feateng_vector.append(df_tmp) 
+
+
+    # Percentage change between the current and a prior element.
+    for p in [1, 3, 6]:
+
+        df_tmp = df.apply(
+            lambda x: x.pct_change(periods=p, fill_method='pad').replace(np.inf,0).replace(-np.inf,0).replace(np.nan,0)
+        )
+        df_tmp.columns = [c + f"_pct_p{p}" for c in df_tmp.columns]
+        feateng_vector.append(df_tmp) 
+
+
+    return pd.concat(feateng_vector, axis=1)

@@ -53,3 +53,21 @@ def save_data(output_file_name, data):
     data.to_pickle(config.OUTPUT_PATH + f'{output_file_name}.pkl')
     
     return 0
+
+
+# replace outliers with a default value
+# @data: imput dataset
+# @attrs: what variables want to trim their outlier's values
+# @return: same dataset from imput without outliers 
+def trim_outliers(data, attrs, params=None):
+    for x in attrs:
+        q75,q25 = np.percentile(data.loc[:,x],[75,25])
+        intr_qr = q75-q25
+    
+        max = q75+(1.5*intr_qr)
+        min = q25-(1.5*intr_qr)
+    
+        data.loc[data[x] < min,x] = min
+        data.loc[data[x] > max,x] = max
+    
+    return data
