@@ -6,20 +6,10 @@ import logging
 import pandas as pd
 from pathlib import Path
 import argparse
-import config
+import src.data.config
+from data_functions import load_data, save_data
+from data_functions import winsorizer, power_transformation
 
-# LOAD DATASET
-def load_data(input_file):
-    data  = pd.read_csv(f"{config.INPUT_PATH}{input_file}.csv", sep=config.CSV_SEP)
-
-    return data
-
-# SAVE DATASET
-def save_data(output_file, data):
-    
-    data.to_pickle(config.OUTPUT_PATH + f'{output_file}.pkl')
-    
-    return 0
 
 # PROCESS DATA
 def process_data(data):
@@ -45,13 +35,30 @@ def main(input_file, output_file):
     logger.info('INIT: making final data set from raw data')
 
     logger.info('RUN: Loading data')
-    df = load_data(input_file)
+    df = load_data(input_file, kind='csv')
    
     logger.info(f'RUN: Data size before be processed: {df.shape}')
     
     logger.info(f'RUN: Processing data')
 
-    df = process_data(df)
+    # ****************************************************** # 
+    # put here what you think is needed to build features 
+    # ****************************************************** #
+    
+
+
+    # **************** TRAIN ************* #
+
+    # numerical values 
+    #df = winsorizer(df, config.numerical_columns)
+    df = power_transformation(df, config.numerical_columns, function='boxcox')
+
+    # **************** TEST ************* #
+
+    # numerical values 
+    #df = winsorizer(df, config.numerical_columns)
+    #df = power_transformation(df, config.numerical_columns, function='ln')
+
 
     logger.info(f'RUN: Data size after be processed: {df.shape}')
 

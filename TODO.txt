@@ -1,0 +1,12 @@
+TODO:
+- script en data para convertir archivos csv a pickle (o uno generico que convierte de un tipo dado a otro)
+- corregir y organizar la carpeta de features selection
+- crear un scrip que tome un dataset y filtre con los campos de features seleccionados y guarde en un nuevo dataset
+- grid search, random search y gausian search hyperparameter generico haciendo uso de model dispatcher
+- script bash que cree carpetas en bucket aws gcp de datos y modelos (replicar lo que esta en make_folder para gcp)
+- script para crear enviroment de python necesario para usar en el proyecto
+
+- agregar lo de reporte de resultados de los modelos en pdf para test y CV (https://machinelearningmastery.com/repeated-k-fold-cross-validation-with-python/ y https://towardsdatascience.com/creating-pdf-files-with-python-ad3ccadfae0f https://anvil.works/blog/generate-pdf-with-python   -  https://www.kdnuggets.com/2018/08/building-reliable-machine-learning-models-cross-validation.html)
+
+- agregar tecnicas de balanceo de clases en data/features -> https://machinelearningmastery.com/xgboost-for-imbalanced-classification/
+- agregar features_explo en notebooks (feature importance , shap) 

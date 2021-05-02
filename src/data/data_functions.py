@@ -4,10 +4,11 @@
 # Import libraries
 import logging
 import pandas as pd
+import numpy as np
 from pathlib import Path
 import argparse
-import config
 import gc
+from scipy import stats
 
 
 # REDUCE MEMORY USAGE
@@ -33,15 +34,15 @@ def reduce_mem_usage(df, verbose=False):
 
 
 # LOAD DATASET 
-def load_data(input_file_name, kind='csv'):
+def load_data(file_path, kind='csv'):
     data = pd.DataFrame([])
 
     if kind=='csv':
-        data  = pd.read_csv(f"{config.INPUT_PATH}{input_file_name}.csv", sep=config.CSV_SEP).pipe(reduce_mem_usage)
+        data  = pd.read_csv(f"{file_path}.csv", sep=config.CSV_SEP).pipe(reduce_mem_usage)
     elif kind=='pickle':
-        data  = pd.read_pickle(f"{config.INPUT_PATH}{input_file_name}.pkl").pipe(reduce_mem_usage)
+        data  = pd.read_pickle(f"{file_path}.pkl").pipe(reduce_mem_usage)
     elif kind=='parquet':
-        data  = pd.read_parquet(f"{config.INPUT_PATH}{input_file_name}.parquet").pipe(reduce_mem_usage)
+        data  = pd.read_parquet(f"{file_path}.parquet").pipe(reduce_mem_usage)
     else:
         raise Exception(f"`kind` should be csv, pickle or parquet. `{kind}` value is not allowed.") 
     return data
@@ -55,11 +56,11 @@ def save_data(output_file_name, data):
     return 0
 
 
-# replace outliers with a default value
+# replace outliers with top and bottom value
 # @data: imput dataset
 # @attrs: what variables want to trim their outlier's values
 # @return: same dataset from imput without outliers 
-def trim_outliers(data, attrs, params=None):
+def winsorizer(data, attrs, params=None):
     for x in attrs:
         q75,q25 = np.percentile(data.loc[:,x],[75,25])
         intr_qr = q75-q25
@@ -71,3 +72,28 @@ def trim_outliers(data, attrs, params=None):
         data.loc[data[x] > max,x] = max
     
     return data
+
+# apply power transformation to numerical variables in order to stabilize variance
+# @data: imput dataset
+# @attrs: what variables want to apply power transformation
+# @funtion: function to apply. Only functions allowed are 'ln', 'sqrt', 'pow' and 'boxcox'
+# @return: same dataset from imput with a new numerical values distribution
+def power_transformation(data, attrs, function='ln'):
+
+    assert function in ['ln', 'sqrt', 'pow', 'boxcox'], "function must be 'ln', 'sqrt', 'pow' or 'boxcox'"
+
+    if function == 'ln':
+        data.loc[:, attrs] =  data.loc[:, attrs].apply(lambda x: np.log1p(x))
+
+    elif function == 'sqrt':
+        data.loc[:, attrs] = data.loc[:, attrs].apply(lambda x: np.sqrt(abs(x)))
+
+    elif function == 'pow':
+        data.loc[:, attrs] = data.loc[:, attrs].apply(lambda x: np.power(x,2))
+
+    elif function == 'boxcox':
+        data.loc[:, attrs] = data.loc[:, attrs].apply(lambda x: stats.boxcox(x))
+    else:
+        data.loc[:, attrs] =  data.loc[:, attrs].apply(lambda x: np.log1p(x))
+    
+    return data 
