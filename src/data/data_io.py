@@ -15,6 +15,7 @@ import time
 import logging
 
 import h5py
+import pickle
 import numpy as np
 
 
@@ -39,7 +40,7 @@ def save_data(X, y, path):
         y (numpy array): Target vector. If None, all zero vector will be saved.
         path (str): Path to the CSV, LibSVM or HDF5 file to save data.
     """
-    catalog = {'.csv': save_csv, '.sps': save_libsvm, '.h5': save_hdf5}
+    catalog = {'.csv': save_csv, '.sps': save_libsvm, '.h5': save_hdf5, '.pkl': save_pickle}
 
     ext = os.path.splitext(path)[1]
     func = catalog[ext]
@@ -101,6 +102,22 @@ def save_hdf5(X, y, path):
             f['indptr'] = X.indptr
         else:
             f['data'] = X
+
+
+def save_pickle(X, y, path):
+    """Save data as a Pickle file.
+
+    Args:
+        X (numpy or scipy sparse matrix): Data matrix
+        y (numpy array): Target vector.
+        path (str): Path to the Pickle file to save data.
+    """
+
+    # open a file, where you ant to store the data
+    with open(path, 'ab') as f:
+      
+        # source, destination
+        pickle.dump(np.hstack((y.reshape((-1, 1)), X)), f)                     
 
 
 def load_data(path, dense=False):
@@ -177,6 +194,28 @@ def load_hdf5(path):
         y = f['target'][...]
 
     return X, y
+
+
+
+def load_pickle(path):
+    """Load data from a Pickle file.
+
+    Args:
+        path (str): A path to the CSV format file containing data.
+        
+
+    Returns:
+        Data matrix X and target vector y
+    """
+
+    with open(path, 'rb') as f:
+        X = pickle.load(file)
+
+    y = np.array(X[:, 0]).flatten()
+    X = X[:, 1:]
+
+    return X, y
+
 
 
 def read_sps(path):
