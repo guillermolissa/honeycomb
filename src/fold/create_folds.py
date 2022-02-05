@@ -1,16 +1,31 @@
-# make_fold.py
+# create_folds.py
 #!/usr/bin/env python
 # coding: utf-8
 
 # Import libraries
-import numpy as np
+import logging
+import argparse 
 import pandas as pd
-
-from sklearn import datasets
+import numpy as np
+import random
 from sklearn import model_selection
+from torch import int64
+import config
 
 
 def make_folds(data, target='target', folds=3, kind='classification', seed=47):
+    """Split dataframe in k folds by target and add new variable kfold with k values correponding to each fold
+
+    Args:
+        data (Pandas dataframe): Dataframe to split into k folds
+        target (str, optional): Target value from where the dataframe will be splited into k folds. Defaults to 'target'.
+        folds (int, optional): Number of folds. Defaults to 3.
+        kind (str, optional): Only two values posible ['classification','regression']. Defaults to 'classification'.
+        seed (int, optional): Seed value to random select . Defaults to 47.
+
+    Returns:
+        [type]: Original dataframe with a new variable kfold who content the k fold value to split the dataframe.
+    """
 
     assert kind in ['classification', 'regression'], f"'kind' should be 'classification' or 'regression'. {kind} was provided"
 
@@ -72,3 +87,33 @@ def make_hold_out(data,  target='target', test_size=0.3, seed=47):
     X_test.loc[:, "kfold"]  = 1
 
     return pd.concat([X_train,X_test],axis=0)
+
+
+
+if __name__ == "__main__":
+    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level=logging.INFO, format=log_fmt)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument( "--input_file",   required=True, 
+        help="Specify file from features folder to be splited without extension.", type=str )
+    parser.add_argument( "--kfold",   required=True, 
+        help="Specify the number of K folds in which the dataset will be splited.", type=int)
+    
+    args = vars(parser.parse_args())
+    
+    logger = logging.getLogger(__name__)
+    logger.info(f"INIT: creating {args['kfold']} folds on {args['input_file']}")
+
+
+    # LOAD DATASET
+    data = pd.read_csv(config.INPUT_PATH + args['input_file'])
+
+    # FOLD
+    data = make_folds(data, target=config.LABEL, folds=args['kfold'], kind=config.KIND, seed=config.SEED)
+
+    # SAVE DATASET
+    data.to_csv(config.INPUT_PATH + args['input_file'])
+    
+
+    logger.info('END: folds created successfully.')
