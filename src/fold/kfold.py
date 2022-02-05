@@ -1,67 +1,62 @@
-# make_train_test_dataset.py
+# make_fold.py
 #!/usr/bin/env python
 # coding: utf-8
 
 # Import libraries
-import logging
-import argparse 
-import pandas as pd
 import numpy as np
-import random
-import config
+import pandas as pd
+
+from sklearn import datasets
 from sklearn import model_selection
 
 
+def make_folds(data, target='target', folds=3, kind='classification', seed=47):
 
+    assert kind in ['classification', 'regression'], f"'kind' should be 'classification' or 'regression'. {kind} was provided"
 
-def make_kfold_classif(data, target='target', folds=3, seed=47):
+    if kind == 'classification':
     
-    # Training data is in a csv file called train.csv df = pd.read_csv("train.csv")
-    # we create a new column called kfold and fill it with -1
-    data["kfold"] = -1
+        # Training data is in a csv file called train.csv df = pd.read_csv("train.csv")
+        # we create a new column called kfold and fill it with -1
+        data["kfold"] = -1
 
-    # the next step is to randomize the rows of the data
-    data = data.sample(frac=1).reset_index(drop=True) # fetch targets
-    y = data.loc[:, target].values
-    
-    # initiate the kfold class from model_selection module
-    kf = model_selection.StratifiedKFold(n_splits=folds)
+        # the next step is to randomize the rows of the data
+        data = data.sample(frac=1).reset_index(drop=True) # fetch targets
+        y = data.loc[:, target].values
+        
+        # initiate the kfold class from model_selection module
+        kf = model_selection.StratifiedKFold(n_splits=folds)
 
-    # fill the new kfold column
-    for f, (t_, v_) in enumerate(kf.split(X=data, y=y)): 
-        data.loc[v_, 'kfold'] = f
+        # fill the new kfold column
+        for f, (t_, v_) in enumerate(kf.split(X=data, y=y)): 
+            data.loc[v_, 'kfold'] = f
+
+    elif kind == 'regression':
+        # we create a new column called kfold and fill it with -1 data["kfold"] = -1
+        # the next step is to randomize the rows of the data
+        data = data.sample(frac=1).reset_index(drop=True)
+
+        # calculate the number of bins by Sturge's rule # I take the floor of the value, you can also # just round it
+        num_bins = np.floor(1 + np.log2(len(data)))
+        
+        # bin targets
+        data.loc[:, "bins"] = pd.cut(
+            data[target], bins=num_bins, labels=False
+            )
+        
+        # initiate the kfold class from model_selection module
+        kf = model_selection.StratifiedKFold(n_splits=folds)
+
+        # fill the new kfold column
+        # note that, instead of targets, we use bins!
+        
+        for f, (t_, v_) in enumerate(kf.split(X=data, y=data.bins.values)):
+            data.loc[v_, 'kfold'] = f
+        
+        # drop the bins column
+        data = data.drop("bins", axis=1) # return dataframe with folds return data
 
     # return the new dataframe with kfold column
-    return data
-
-
-
-def make_kfold_regression(data,  target='target', folds=3, seed=47):
-    # we create a new column called kfold and fill it with -1 data["kfold"] = -1
-    # the next step is to randomize the rows of the data
-    data = data.sample(frac=1).reset_index(drop=True)
-
-    # calculate the number of bins by Sturge's rule # I take the floor of the value, you can also # just round it
-    num_bins = np.floor(1 + np.log2(len(data)))
-    
-    # bin targets
-    data.loc[:, "bins"] = pd.cut(
-        data[target], bins=num_bins, labels=False
-        )
-    
-    # initiate the kfold class from model_selection module
-    kf = model_selection.StratifiedKFold(n_splits=folds)
-
-    # fill the new kfold column
-    # note that, instead of targets, we use bins!
-    
-    for f, (t_, v_) in enumerate(kf.split(X=data, y=data.bins.values)):
-        data.loc[v_, 'kfold'] = f
-    
-    # drop the bins column
-    data = data.drop("bins", axis=1) # return dataframe with folds return data
-    
-
     return data
     
     
