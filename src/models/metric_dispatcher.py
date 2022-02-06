@@ -1,5 +1,6 @@
 from sklearn import metrics
 import numpy as np
+import math
 
 
 def true_positive(y_true, y_pred): 
@@ -135,6 +136,22 @@ def mcc(y_true, y_pred):
     denominator = denominator ** 0.5
 
     return numerator/denominator
+
+
+
+def rmse(y_true, y_pred):
+    """
+    This function calculates Root mean square error for regression.
+    :param y_true: list of true values
+    :param y_pred: list of predicted values
+    :return: root mean square error
+    """
+
+    MSE = metrics.mean_squared_error(y_true, y_pred)
+ 
+    RMSE = math.sqrt(MSE)
+
+    return RMSE
 
 
 
