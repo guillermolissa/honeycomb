@@ -9,27 +9,27 @@ import pandas as pd
 import numpy as np
 import random
 from sklearn import model_selection
-from torch import int64
 import config
+from data.data_io import load_data
+import os 
 
-
-def make_folds(data, target='target', folds=3, kind='classification', seed=47):
+def make_folds(data, target='target', folds=3, task='classification', seed=47):
     """Split dataframe in k folds by target and add new variable kfold with k values correponding to each fold
 
     Args:
         data (Pandas dataframe): Dataframe to split into k folds
         target (str, optional): Target value from where the dataframe will be splited into k folds. Defaults to 'target'.
         folds (int, optional): Number of folds. Defaults to 3.
-        kind (str, optional): Only two values posible ['classification','regression']. Defaults to 'classification'.
+        task (str, optional): specifies what kind of problem we have. Only two values posible ['classification','regression']. Defaults to 'classification'.
         seed (int, optional): Seed value to random select . Defaults to 47.
 
     Returns:
         [type]: Original dataframe with a new variable kfold who content the k fold value to split the dataframe.
     """
 
-    assert kind in ['classification', 'regression'], f"'kind' should be 'classification' or 'regression'. {kind} was provided"
+    assert task in ['classification', 'regression'], f"'task' should be 'classification' or 'regression'. {task} was provided"
 
-    if kind == 'classification':
+    if task == 'classification':
     
         # Training data is in a csv file called train.csv df = pd.read_csv("train.csv")
         # we create a new column called kfold and fill it with -1
@@ -46,7 +46,7 @@ def make_folds(data, target='target', folds=3, kind='classification', seed=47):
         for f, (t_, v_) in enumerate(kf.split(X=data, y=y)): 
             data.loc[v_, 'kfold'] = f
 
-    elif kind == 'regression':
+    elif task == 'regression':
         # we create a new column called kfold and fill it with -1 data["kfold"] = -1
         # the next step is to randomize the rows of the data
         data = data.sample(frac=1).reset_index(drop=True)
@@ -105,15 +105,14 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
     logger.info(f"INIT: creating {args['kfold']} folds on {args['input_file']}")
 
-
     # LOAD DATASET
-    data = pd.read_csv(config.INPUT_PATH + args['input_file'])
+    data = load_data(args['input_file'])
 
     # FOLD
-    data = make_folds(data, target=config.LABEL, folds=args['kfold'], kind=config.KIND, seed=config.SEED)
+    data = make_folds(data, target=config.LABEL, folds=args['kfold'], task=config.task, seed=config.SEED)
 
     # SAVE DATASET
-    data.to_csv(config.INPUT_PATH + args['input_file'])
+    data.to_csv(args['input_file'])
     
 
     logger.info('END: folds created successfully.')
