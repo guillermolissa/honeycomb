@@ -1,4 +1,4 @@
-# train_cvmodel.py
+# train.py
 # desc: train and validate model using CV
 # @autor: glissa
 # created: 2021/01/06
@@ -46,27 +46,30 @@ def run(model, file_name, metric):
             df_train = df[df.kfold != fold].reset_index(drop=True)
 
             # validation data is where kfold is equal to provided fold
-            df_valid = df[df.kfold == fold].reset_index(drop=True) # drop the label column from dataframe and convert it to
+            df_valid = df[df.kfold == fold].reset_index(drop=True) # drop the label and kfold column from dataframe and convert it to
             
             # a numpy array by using .values.
             # target is label column in the dataframe
-            x_train = df_train.drop(config.LABEL, axis=1).values 
+            x_train = df_train.drop([config.LABEL, 'kfold'], axis=1).values 
             y_train = df_train[config.LABEL].values
             
             # similarly, for validation, we have
-            x_valid = df_valid.drop(config.LABEL, axis=1).values 
+            x_valid = df_valid.drop([config.LABEL, 'kfold'], axis=1).values 
             y_valid = df_valid[config.LABEL].values
 
             logger.info(f"RUN: training cv Model = '{model}' - Fold = {fold}")
+            
             # fetch the model from model_dispatcher
             clf = model_dispatcher.models[model]
-            # fir the model on training data
+            
+            # fit the model on training data
             clf.fit(x_train, y_train)
+
             # create predictions for validation samples
             preds = clf.predict(x_valid)
 
 
-            # calculate & print accuracy
+            # calculate & print metric
             metricfun = metric_dispatcher.metrics_score[metric]
             result = metricfun(y_valid, preds) 
             print(f"Fold={fold}, {metric}={result}")
@@ -74,10 +77,11 @@ def run(model, file_name, metric):
 
             cv_val_result.append(result)
 
+            # calling garbage collector
             gc.collect()
             
 
-            # save the model
+            # save the model fold model
             joblib.dump( clf, os.path.join(config.MODEL_OUTPUT, f"{model}_{fold}.bin") )
 
             
