@@ -26,9 +26,8 @@ Project Organization
     ├── requirements.txt             <- The requirements file for reproducing the analysis environment, e.g.
     │                                    generated with `pip freeze > requirements.txt`
     │ 
-    ├── notebooks                    <- Jupyter notebooks (Source code for use in this project)
+    ├── notebooks                    <- Jupyter notebooks (Source code for use in this project and EDA)
     │    │
-    │    ├── feature_selection       <- Methods to select features from data
     │    │
     │    └── visualization           <- Scripts to create exploratory and results oriented
     │
@@ -51,17 +50,29 @@ Project Organization
         │
         │
         ├── features                 <- Scripts to turn raw data into features for modeling
-        │   └── build_features.ipynb
+        │   │         
+        │   └── tabular_feature_engineer   <- Functions to make feature engineer from raw tabular data
+        │   │         
+        │   └── sound_feature_engineer     <- Functions to make feature engineer from raw data sound or time series data
+        │   │         
+        │   └── text_feature_engineer      <- Functions to make feature engineer from text data 
+        │   │      
+        │   └── build_features             <- main script from features eng. function are called 
         │
-        ├── models         <- Scripts to train models and then use trained models to make
-        │   │                 predictions
-        │   ├── run.sh     <- bash script where train and test experiment are setted up
-        │   └── train_model.py   
-        │   └── predict_model.py 
-        │   └── train_cvmodel.py 
-        │   └── random_search.py
+        │
+        ├── models                   <- Scripts to train models and then use trained models to make predictions
+        │   │                                               
+        │   ├── run.sh               <- bash script where train and test experiment are setted up
+        │   │ 
+        │   └── train                <- main script to train model
+        │   │ 
+        │   └── inference            <- main script to inference from trained model   
         │   
-        └── fold                    <- Scripts to create folds from datasets 
+        │   
+        │   
+        ├── fold                    <- Scripts to create folds from datasets 
+        │   
+        └── metric                  <- Scripts with many validation functions  
 
 --------
 
