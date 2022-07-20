@@ -120,28 +120,23 @@ def save_pickle(X, y, path):
         pickle.dump(np.hstack((y.reshape((-1, 1)), X)), f)                     
 
 
-def load_data(path, dense=False):
+def load_data(path):
     """Load data from a CSV, LibSVM or HDF5 file based on the file extension.
 
     Args:
         path (str): A path to the CSV, LibSVM or HDF5 format file.
-        dense (boolean): An optional variable indicating if the return matrix
-                         should be dense.  By default, it is false.
+        
 
     Returns:
-        Data matrix X and target vector y
+        pandas DataFrame
     """
 
-    catalog = {'.csv': load_csv, '.sps': load_svmlight_file, '.h5': load_hdf5}
+    catalog = {'.csv': load_csv, '.sps': load_svmlight_file, '.h5': load_hdf5, '.ftr': load_feather, '.pkl':load_pickle}
 
     ext = os.path.splitext(path)[1]
     func = catalog[ext]
-    X, y = func(path)
-
-    if dense and sparse.issparse(X):
-        X = X.todense()
-
-    return X, y
+    
+    return func(path)
 
 
 def load_csv(path):
@@ -149,23 +144,26 @@ def load_csv(path):
 
     Args:
         path (str): A path to the CSV format file containing data.
-        dense (boolean): An optional variable indicating if the return matrix
-                         should be dense.  By default, it is false.
-
+        
     Returns:
-        Data matrix X and target vector y
+        Pandas Dataframe 
     """
 
-    with open(path) as f:
-        line = f.readline().strip()
+    return pd.read_csv(path)
 
-    X = np.loadtxt(path, delimiter=',',
-                   skiprows=0 if is_number(line.split(',')[0]) else 1)
 
-    y = np.array(X[:, 0]).flatten()
-    X = X[:, 1:]
+def load_feather(path):
+    """Load data from a feather file (https://arrow.apache.org/docs/python/feather.html).
 
-    return X, y
+    Args:
+        path (str): A path to the feather file containing data.
+         
+        
+    Returns:
+        Pandas Dataframe 
+    """
+
+    return pd.read_feather(path)
 
 
 def load_hdf5(path):
