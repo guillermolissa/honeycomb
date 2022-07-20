@@ -22,8 +22,6 @@ Project Organization
     │
     ├── references                   <- Data dictionaries, manuals, and all other explanatory materials.
     │
-    ├── reports                      <- Generated analysis as HTML, PDF, LaTeX, etc.
-    │   └── figures                  <- Generated graphics and figures to be used in reporting
     │
     ├── requirements.txt             <- The requirements file for reproducing the analysis environment, e.g.
     │                                    generated with `pip freeze > requirements.txt`
@@ -38,10 +36,21 @@ Project Organization
         │
         ├── __init__.py              <- Makes src a Python module
         │
-        ├── data                     <- Scripts to download or generate data
-        │   └── make_dataset.ipynb
+        ├── data                     
+        │   └── make_dataset         <- Scripts to download or generate data
+        │   │         
+        │   └── data_io              <- Functions to load and save data
+        │   │         
+        │   └── preprocess_tabular   <- Functions to preprocess raw tabular data
+        │   │         
+        │   └── preprocess_sound     <- Functions to preprocess sound or time series data
+        │   │         
+        │   └── preprocess_sound     <- Functions to preprocess text raw data
+        │   │      
+        │   └── preprocess_image     <- Functions to preprocess raw image data
         │
-        ├── features       <- Scripts to turn raw data into features for modeling
+        │
+        ├── features                 <- Scripts to turn raw data into features for modeling
         │   └── build_features.ipynb
         │
         ├── models         <- Scripts to train models and then use trained models to make
@@ -52,9 +61,11 @@ Project Organization
         │   └── train_cvmodel.py 
         │   └── random_search.py
         │   
-        └── fold  <- Scripts to create folds from datasets 
+        └── fold                    <- Scripts to create folds from datasets 
 
 --------
 
 
 # honeycomb
+
+Honeycomb is a simple Machine learning framework with the aim to have a simple but useful starting point for data science projects and kaggle competitions. Some things have be borrow from other projects and have been adapted to it.
