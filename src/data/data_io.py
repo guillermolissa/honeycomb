@@ -120,25 +120,6 @@ def save_pickle(X, y, path):
         pickle.dump(np.hstack((y.reshape((-1, 1)), X)), f)                     
 
 
-def load_data(path):
-    """Load data from a CSV, LibSVM or HDF5 file based on the file extension.
-
-    Args:
-        path (str): A path to the CSV, LibSVM or HDF5 format file.
-        
-
-    Returns:
-        pandas DataFrame
-    """
-
-    catalog = {'.csv': load_csv, '.sps': load_svmlight_file, '.h5': load_hdf5, '.ftr': load_feather, '.pkl':load_pickle}
-
-    ext = os.path.splitext(path)[1]
-    func = catalog[ext]
-    
-    return func(path)
-
-
 def load_csv(path):
     """Load data from a CSV file.
 
@@ -150,6 +131,19 @@ def load_csv(path):
     """
 
     return pd.read_csv(path)
+
+
+def load_excel(path):
+    """
+    Load data from a xls file.
+
+    Args:
+        path (str): A path to the xls format file containing data.
+        
+    Returns:
+        Pandas Dataframe 
+    """
+    return pd.read_excel(path)
 
 
 def load_feather(path):
@@ -233,6 +227,32 @@ def read_sps(path):
         yield xs[1:], int(xs[0])
 
 
+
+def load_data(path):
+    """Load data from a CSV, LibSVM or HDF5 file based on the file extension.
+
+    Args:
+        path (str): A path to the CSV, LibSVM or HDF5 format file.
+        
+
+    Returns:
+        pandas DataFrame
+    """
+
+    catalog = {'.csv': load_csv, '.sps': load_svmlight_file, 
+                '.h5': load_hdf5, '.ftr': load_feather, '.pkl':load_pickle,
+                'xls': load_excel}
+
+    ext = os.path.splitext(path)[1]
+
+    assert ext in catalog.keys(), f"'Format file `{ext}` is not supported by function load_data."
+
+    func = catalog[ext]
+    
+    return func(path)
+
+
+
 def shuf_file(f, shuf_win):
     heap = []
     for line in f:
@@ -246,6 +266,7 @@ def shuf_file(f, shuf_win):
     while len(heap) > 0:
         _, out = heapq.heappop(heap)
         yield out
+
 
 
 class PathJoiner:
