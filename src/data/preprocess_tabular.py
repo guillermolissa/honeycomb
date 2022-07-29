@@ -1,6 +1,8 @@
-# data_functions.py
+# tabular_preprocess.py
 #!/usr/bin/env ml
 # coding: utf-8
+# Functions to preprocess tabular data
+
 # Import libraries
 import logging
 import pandas as pd
@@ -9,6 +11,9 @@ from pathlib import Path
 import argparse
 import gc
 from scipy import stats
+
+
+
 
 
 # REDUCE MEMORY USAGE
@@ -33,34 +38,18 @@ def reduce_mem_usage(df, verbose=False):
     return df
 
 
-# LOAD DATASET 
-def load_data(file_path, kind='csv'):
-    data = pd.DataFrame([])
 
-    if kind=='csv':
-        data  = pd.read_csv(f"{file_path}.csv", sep=config.CSV_SEP).pipe(reduce_mem_usage)
-    elif kind=='pickle':
-        data  = pd.read_pickle(f"{file_path}.pkl").pipe(reduce_mem_usage)
-    elif kind=='parquet':
-        data  = pd.read_parquet(f"{file_path}.parquet").pipe(reduce_mem_usage)
-    else:
-        raise Exception(f"`kind` should be csv, pickle or parquet. `{kind}` value is not allowed.") 
-    return data
-
-
-# SAVE DATASET
-def save_data(output_file_name, data):
-    
-    data.to_pickle(config.OUTPUT_PATH + f'{output_file_name}.pkl')
-    
-    return 0
-
-
-# replace outliers with top and bottom value
-# @data: imput dataset
-# @attrs: what variables want to trim their outlier's values
-# @return: same dataset from imput without outliers 
 def winsorizer(data, attrs, params=None):
+    """Replace outliers with top and bottom value
+
+    Args:
+        data (Pandas dataframe): imput dataset
+        attrs (list): what variables want to trim their outlier's values
+        params (None, optional):  Defaults to None.
+
+    Returns:
+        Pandas dataframe: Return dataset with attrs without outliers 
+    """
     for x in attrs:
         q75,q25 = np.percentile(data.loc[:,x],[75,25])
         intr_qr = q75-q25
