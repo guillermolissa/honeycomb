@@ -32,38 +32,18 @@ def is_number(s):
         return False
 
 
-def save_data(X, y, path):
-    """Save data as a CSV, LibSVM or HDF5 file based on the file extension.
-
-    Args:
-        X (numpy or scipy sparse matrix): Data matrix
-        y (numpy array): Target vector. If None, all zero vector will be saved.
-        path (str): Path to the CSV, LibSVM or HDF5 file to save data.
-    """
-    catalog = {'.csv': save_csv, '.sps': save_libsvm, '.h5': save_hdf5, '.pkl': save_pickle}
-
-    ext = os.path.splitext(path)[1]
-    func = catalog[ext]
-
-    if y is None:
-        y = np.zeros((X.shape[0], ))
-
-    func(X, y, path)
 
 
-def save_csv(X, y, path):
+
+def save_csv(path, df):
     """Save data as a CSV file.
 
     Args:
-        X (numpy or scipy sparse matrix): Data matrix
-        y (numpy array): Target vector.
+        X (pandas dataframes): Data matrix
         path (str): Path to the CSV file to save data.
     """
 
-    if sparse.issparse(X):
-        X = X.todense()
-
-    np.savetxt(path, np.hstack((y.reshape((-1, 1)), X)), delimiter=',')
+    pd.save_csv(path, index=False)
 
 
 def save_libsvm(X, y, path):
@@ -104,12 +84,12 @@ def save_hdf5(X, y, path):
             f['data'] = X
 
 
-def save_pickle(X, y, path):
+def save_pickle(path, df):
     """Save data as a Pickle file.
 
     Args:
-        X (numpy or scipy sparse matrix): Data matrix
-        y (numpy array): Target vector.
+        X (pandas DataFrame): Dataframe
+        
         path (str): Path to the Pickle file to save data.
     """
 
@@ -117,7 +97,55 @@ def save_pickle(X, y, path):
     with open(path, 'ab') as f:
       
         # source, destination
-        pickle.dump(np.hstack((y.reshape((-1, 1)), X)), f)                     
+        pickle.dump(df, f)                     
+
+
+
+
+def save_data(path, df):
+    """Save data as a CSV, LibSVM or HDF5 file based on the file extension.
+
+    Args:
+        df (pandas DataFrame): Dataframe
+        path (str): Path to the CSV, LibSVM or HDF5 file to save data.
+    """
+    catalog = {'.csv': save_csv, '.sps': save_libsvm, '.h5': save_hdf5, '.pkl': save_pickle}
+
+    ext = os.path.splitext(path)[1]
+    
+    assert ext in catalog.keys(), f"'Format file `{ext}` is not supported by function load_data."
+
+    func = catalog[ext]
+    
+    func(path, df)
+
+    pass
+
+
+
+def load_data(path):
+    """Load data from a CSV, LibSVM or HDF5 file based on the file extension.
+
+    Args:
+        path (str): A path to the CSV, LibSVM or HDF5 format file.
+        
+
+    Returns:
+        pandas DataFrame
+    """
+
+    catalog = {'.csv': load_csv, '.sps': load_svmlight_file, 
+                '.h5': load_hdf5, '.ftr': load_feather, '.pkl':load_pickle,
+                'xls': load_excel}
+
+    ext = os.path.splitext(path)[1]
+
+    assert ext in catalog.keys(), f"'Format file `{ext}` is not supported by function load_data."
+
+    func = catalog[ext]
+    
+    return func(path)
+
 
 
 def load_csv(path):
@@ -131,6 +159,7 @@ def load_csv(path):
     """
 
     return pd.read_csv(path)
+
 
 
 def load_excel(path):
