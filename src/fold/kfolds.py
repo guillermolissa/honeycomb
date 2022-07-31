@@ -1,4 +1,4 @@
-# create_folds.py
+# kfolds.py
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -10,7 +10,7 @@ import numpy as np
 import random
 from sklearn import model_selection
 import config
-from data.data_io import load_data
+from data.data_io import load_data, save_data
 import os 
 
 def make_folds(data, target='target', folds=3, task='classification', seed=47):
@@ -64,7 +64,6 @@ def make_folds(data, target='target', folds=3, task='classification', seed=47):
 
         # fill the new kfold column
         # note that, instead of targets, we use bins!
-        
         for f, (t_, v_) in enumerate(kf.split(X=data, y=data.bins.values)):
             data.loc[v_, 'kfold'] = f
         
@@ -75,20 +74,6 @@ def make_folds(data, target='target', folds=3, task='classification', seed=47):
     return data
     
     
-
-def make_hold_out(data,  target='target', test_size=0.3, seed=47):
-
-    data["kfold"]=-1
-    y = data.loc[:, target]
-
-    X_train, X_test= model_selection.train_test_split(data["kfold"], test_size=test_size, random_state=seed, stratify=y)
-
-    X_train.loc[:, "kfold"] = 0
-    X_test.loc[:, "kfold"]  = 1
-
-    return pd.concat([X_train,X_test],axis=0)
-
-
 
 if __name__ == "__main__":
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -109,10 +94,10 @@ if __name__ == "__main__":
     data = load_data(args['input_file'])
 
     # FOLD
-    data = make_folds(data, target=config.LABEL, folds=args['kfold'], task=config.task, seed=config.SEED)
+    data = make_folds(data, target=config.LABEL, folds=args['kfold'], task=config.TASK, seed=config.SEED)
 
     # SAVE DATASET
-    data.to_csv(args['input_file'])
+    save_data(args['input_file'], data)
     
 
     logger.info('END: folds created successfully.')
