@@ -17,7 +17,7 @@ import logging
 import h5py
 import pickle
 import numpy as np
-
+import pandas as pd
 
 logger = logging.getLogger('Kaggler')
 
@@ -32,9 +32,6 @@ def is_number(s):
         return False
 
 
-
-
-
 def save_csv(path, df):
     """Save data as a CSV file.
 
@@ -43,7 +40,7 @@ def save_csv(path, df):
         path (str): Path to the CSV file to save data.
     """
 
-    pd.save_csv(path, index=False)
+    df.to_csv(path, index=False)
 
 
 def save_libsvm(X, y, path):
