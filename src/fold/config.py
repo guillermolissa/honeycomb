@@ -1,7 +1,7 @@
 # config.py
 INPUT_PATH = "data/raw/"
 OUTPUT_PATH = "data/train_test/"
-KIND = "classification"
+TASK = "classification"
 NJOBS = -1
 VERBOSE = 1
 PLOT = False
