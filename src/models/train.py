@@ -17,6 +17,7 @@ from time import time
 import config
 import model_dispatcher
 import metric_dispatcher
+from data.data_io import load_data
 warnings.filterwarnings("ignore")
 
 
@@ -30,17 +31,17 @@ def run(model, file_name, metric):
     
     logger.info(f'RUN: loading data ')
     # read the training data with folds 
-    df = pd.read_csv(config.INPUT_PATH + file_name)
+    df = load_data(file_name)
 
     folds =-1
 
-    if 'kfold' in df.colums:
+    if 'kfold' in df.columns:
         folds = df.kfold.max()
 
     if folds != -1:
 
         cv_val_result = []
-        for fold in range(folds):
+        for fold in range(folds + 1):
             # training data is where kfold is not equal to provided fold 
             # also, note that we reset the index
             df_train = df[df.kfold != fold].reset_index(drop=True)
@@ -129,4 +130,4 @@ if __name__ == "__main__":
     assert args['model'] in model_dispatcher.models.keys(), f"'{args['model']}' not found in model dispatcher. Try with {list(model_dispatcher.models.keys())}."
     assert args['metric'] in metric_dispatcher.metrics_score.keys(), f"'{args['metric']}' not found in metric dispatcher. Try with {list(metric_dispatcher.metrics_score.keys())}."
 
-    run(model=args['model'], model=args['file_name'], metric=args['metric'])
+    run(model=args['model'], file_name=args['file_name'], metric=args['metric'])
