@@ -12,14 +12,13 @@ import json
 import os
 import pickle
 import time
-import logging
 
 import h5py
 import pickle
 import numpy as np
 import pandas as pd
+import pyarrow.feather as feather
 
-logger = logging.getLogger('Kaggler')
 
 
 def is_number(s):
@@ -97,6 +96,17 @@ def save_pickle(path, df):
         pickle.dump(df, f)                     
 
 
+def save_feather(path, df):
+    """Save data as a feather file.
+
+    Args:
+        X (pandas DataFrame): Dataframe
+        
+        path (str): Path to the feather file to save data.
+    """
+
+    feather.write_feather(df, path, compression='lz4')
+
 
 
 def save_data(path, df):
@@ -106,7 +116,8 @@ def save_data(path, df):
         df (pandas DataFrame): Dataframe
         path (str): Path to the CSV, LibSVM or HDF5 file to save data.
     """
-    catalog = {'.csv': save_csv, '.sps': save_libsvm, '.h5': save_hdf5, '.pkl': save_pickle}
+    catalog = {'.csv': save_csv, '.sps': save_libsvm, '.h5': save_hdf5, 
+                '.pkl': save_pickle, '.ftr': save_feather,}
 
     ext = os.path.splitext(path)[1]
     
@@ -251,31 +262,6 @@ def read_sps(path):
         xs = line.rstrip().split(' ')
 
         yield xs[1:], int(xs[0])
-
-
-
-def load_data(path):
-    """Load data from a CSV, LibSVM or HDF5 file based on the file extension.
-
-    Args:
-        path (str): A path to the CSV, LibSVM or HDF5 format file.
-        
-
-    Returns:
-        pandas DataFrame
-    """
-
-    catalog = {'.csv': load_csv, '.sps': load_svmlight_file, 
-                '.h5': load_hdf5, '.ftr': load_feather, '.pkl':load_pickle,
-                'xls': load_excel}
-
-    ext = os.path.splitext(path)[1]
-
-    assert ext in catalog.keys(), f"'Format file `{ext}` is not supported by function load_data."
-
-    func = catalog[ext]
-    
-    return func(path)
 
 
 
