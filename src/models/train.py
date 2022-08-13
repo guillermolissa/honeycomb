@@ -14,7 +14,7 @@ import gc
 import pickle
 from datetime import datetime
 from time import time
-import config
+from config import Config as config
 import model_dispatcher
 import metric_dispatcher
 from data.data_io import load_data
@@ -23,15 +23,8 @@ warnings.filterwarnings("ignore")
 
 
 
-def run(model, file_name, metric):
-    logger = logging.getLogger(__name__)
-    logger.info(f'INIT: train  Model={model}')
-
-
+def train_eval(model, df, metricfun):
     
-    logger.info(f'RUN: loading data ')
-    # read the training data with folds 
-    df = load_data(file_name)
 
     folds =-1
 
@@ -39,6 +32,9 @@ def run(model, file_name, metric):
         folds = df.kfold.max()
 
     if folds != -1:
+
+        print(f"Training CV Model='{type(model).__name__}'")
+
 
         cv_val_result = []
         for fold in range(folds + 1):
@@ -58,23 +54,17 @@ def run(model, file_name, metric):
             x_valid = df_valid.drop([config.LABEL, 'kfold'], axis=1).values 
             y_valid = df_valid[config.LABEL].values
 
-            logger.info(f"RUN: training cv Model = '{model}' - Fold = {fold}")
-            
-            # fetch the model from model_dispatcher
-            clf = model_dispatcher.models[model]
             
             # fit the model on training data
-            clf.fit(x_train, y_train)
+            model.fit(x_train, y_train)
 
             # create predictions for validation samples
-            preds = clf.predict(x_valid)
+            preds = model.predict(x_valid)
 
-
-            # calculate & print metric
-            metricfun = metric_dispatcher.metrics_score[metric]
+            # calculate & print metric            
             result = metricfun(y_valid, preds) 
-            print(f"Fold={fold}, {metric}={result}")
-            logger.info(f"Fold={fold}, {metric}={result}")
+
+            print(f"Fold={fold}, {metricfun.__name__}={result}")
 
             cv_val_result.append(result)
 
@@ -83,10 +73,10 @@ def run(model, file_name, metric):
             
 
             # save the model fold model
-            joblib.dump( clf, os.path.join(config.MODEL_OUTPUT, f"{model}_{fold}.bin") )
+            joblib.dump( model, config.MODEL_OUTPUT + f"{type(model).__name__.lower()}_{fold}.bin") 
 
             
-        logger.info(f'END: CV {model} - {metric} - mean=%.3f - std=(%.3f)' % (np.mean(cv_val_result), np.std(cv_val_result)))
+        print(f'Result: CV {type(model).__name__} - {metricfun.__name__} - mean=%.3f - std=(%.3f)' % (np.mean(cv_val_result), np.std(cv_val_result)))
     
     else:
         # a numpy array by using .values.
@@ -96,15 +86,15 @@ def run(model, file_name, metric):
             
         
 
-        logger.info(f"RUN: training Model = '{model}' using whole dataset")
-        # fetch the model from model_dispatcher
-        clf = model_dispatcher.models[model]
-        # fir the model on training data
-        clf.fit(x_train, y_train)
+        print(f"Training Model = '{type(model).__name__}'")
+
+
+        # fit the model on training data
+        model.fit(x_train, y_train)
         
 
         # save the model
-        joblib.dump( clf, os.path.join(config.MODEL_OUTPUT, f"{model}.bin") )
+        joblib.dump( model, config.MODEL_OUTPUT + f"{type(model).__name__.lower()}.bin") 
 
 
 
@@ -130,4 +120,29 @@ if __name__ == "__main__":
     assert args['model'] in model_dispatcher.models.keys(), f"'{args['model']}' not found in model dispatcher. Try with {list(model_dispatcher.models.keys())}."
     assert args['metric'] in metric_dispatcher.metrics_score.keys(), f"'{args['metric']}' not found in metric dispatcher. Try with {list(metric_dispatcher.metrics_score.keys())}."
 
-    run(model=args['model'], file_name=args['file_name'], metric=args['metric'])
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"INIT: train  Model={args['model']}")
+
+
+    
+    logger.info(f'RUN: loading data ')
+    
+    # read the training data with folds 
+    df = load_data(args['file_name'])
+
+
+    # fetch the model from model_dispatcher
+    model = model_dispatcher.models[args['model']]
+
+    metricfun = metric_dispatcher.metrics_score[args['metric']]
+
+
+    logger.info(f"RUN: training Model = {type(model).__name__}")
+
+
+    train_eval(model, df, metricfun)
+
+    logger.info(f"END: train  Model={args['model']}")
+
+
