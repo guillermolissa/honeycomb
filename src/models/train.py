@@ -129,7 +129,7 @@ if __name__ == "__main__":
     logger.info(f'RUN: loading data ')
     
     # read the training data with folds 
-    df = load_data(args['file_name'])
+    df = load_data(config.INPUT_PATH + args['file_name'])
 
 
     # fetch the model from model_dispatcher
