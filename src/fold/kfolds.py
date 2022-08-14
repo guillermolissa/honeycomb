@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import random
 from sklearn import model_selection
-import config
+from config import Config as config
 from data.data_io import load_data, save_data
 import os 
 
@@ -91,13 +91,13 @@ if __name__ == "__main__":
     logger.info(f"INIT: creating {args['kfold']} folds on {args['input_file']}")
 
     # LOAD DATASET
-    data = load_data(args['input_file'])
+    data = load_data(config.INPUT_PATH + args['input_file'])
 
     # FOLD
     data = make_folds(data, target=config.LABEL, folds=args['kfold'], task=config.TASK, seed=config.SEED)
 
     # SAVE DATASET
-    save_data(args['input_file'], data)
+    save_data(config.INPUT_PATH + args['input_file'], data)
     
 
     logger.info('END: folds created successfully.')
