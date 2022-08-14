@@ -4,8 +4,8 @@ class Config:
     SEED = 42
     SEC_PER_MIN = 60
     EPS = 1e-15
-    INPUT_PATH = "data/"
-    MODEL_OUTPUT = "models/"
+    INPUT_PATH = "../data/"
+    MODEL_OUTPUT = "../models/"
     SAVE_MODEL = True
     TEST_PATH = "data/features/"
     SUBMIT_PATH = "data/submission/"
@@ -20,3 +20,4 @@ class Config:
     LABEL = "target"
     FOLDS = 5
     KEY_ID = "customer_ID"
+    TASK = "classification"
