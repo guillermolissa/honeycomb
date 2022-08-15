@@ -20,8 +20,6 @@ def build_features(data):
 
     print(f'data size before be processed: {data.shape}')
     
-    logger.info(f'RUN: building features')
-
    
     # ****************************************************** # 
     # put here what you think is needed to build features 
@@ -118,6 +116,7 @@ if __name__ == "__main__":
 
     data = load_data(input_file)
 
+    logger.info(f'RUN: building features')
     data_fe = build_features(data)
 
     logger.info(f'RUN: saving features')
