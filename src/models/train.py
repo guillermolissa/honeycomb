@@ -11,7 +11,6 @@ import numpy as np
 import os
 import joblib
 import gc
-import pickle
 from datetime import datetime
 from time import time
 from config import Config as config
@@ -73,7 +72,7 @@ def train_eval(model, df, metricfun):
             
 
             # save the model fold model
-            joblib.dump( model, config.MODEL_OUTPUT + f"{type(model).__name__.lower()}_{fold}.bin") 
+            joblib.dump( model, config.MODEL_PATH + f"{type(model).__name__.lower()}_{fold}.bin") 
 
             
         print(f'Result: CV {type(model).__name__} - {metricfun.__name__} - mean=%.3f - std=(%.3f)' % (np.mean(cv_val_result), np.std(cv_val_result)))
@@ -94,7 +93,7 @@ def train_eval(model, df, metricfun):
         
 
         # save the model
-        joblib.dump( model, config.MODEL_OUTPUT + f"{type(model).__name__.lower()}.bin") 
+        joblib.dump( model, config.MODEL_PATH + f"{type(model).__name__.lower()}.bin") 
 
 
 
