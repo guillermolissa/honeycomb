@@ -7,26 +7,18 @@ import os
 import logging
 import warnings
 import pandas as pd
-from sklearn.metrics import auc
-from sklearn.metrics import plot_roc_curve
-from sklearn.metrics import make_scorer
-import matplotlib.pyplot as plt
-from numpy import mean
-from numpy import std
-from sklearn.model_selection import cross_validate
-from sklearn.model_selection import StratifiedKFold
 import gc
-import pickle
-from datetime import datetime
+import joblib
 from time import time
-import config
-import model_dispatcher
-import metric_dispatcher
+from config import Config as config
+from data.data_io import load_data
+from config import Config as config
+import model_dispatcher as model_dispatcher
 warnings.filterwarnings("ignore")
 #from plot_model import plot_roc_cv
 
 
-def get_next_filename(model):
+def get_next_filename(filename):
     '''Gets the next numeric filename in a sequence.
 
     All files in the output directory must have the same name format,
@@ -36,7 +28,7 @@ def get_next_filename(model):
     n = 0
     for f in os.listdir(config.SUBMIT_PATH):
         n = max(n, int(get_num_part(os.path.splitext(f)[0])))
-    return f"submit_{model}_n{(n + 1)}.csv" 
+    return f"{filename}_n{(n + 1)}.csv" 
 
 
 def get_num_part(s):
@@ -56,7 +48,7 @@ def get_num_part(s):
 def load_model(modelname):
 
     # load the model from disk
-    model = pickle.load(open(f"{config.MODEL_PATH}{modelname}.bin", 'rb'))
+    model = joblib.load(open(f"{config.MODEL_PATH}{modelname}.bin", 'rb'))
 
     return model
 
@@ -64,58 +56,39 @@ def load_model(modelname):
 
 
 
-def submit(prediction, modelname, data):
+def submit(filename, submit):
     """
     This function should be defined by user 
     """
 
-    data['prediction'] = prediction
-    data.reset_index(inplace=True)
-    submit = data[[config.KEY_ID,config.LABEL]]
+    submit.reset_index(inplace=True)
 
     # get name of next submit file
-    submit_filename = get_next_filename(modelname)
+    submit_filename = get_next_filename(filename)
 
-    submit.to_csv(f"{config.SUBMIT_PATH}{submit_filename}", index=False)
+    submit.to_csv(f"{config.SUBMIT_PATH + submit_filename}", index=False)
 
     if config.KAGGLE_SUBMIT:
-        os.system(f"kaggle competitions submit -c {config.KAGGLE_PROJECT} -f {config.SUBMIT_PATH}{submit_filename} -m 'submit file: {submit_filename} from model: {model}'")
+        os.system(f"kaggle competitions submit -c {config.KAGGLE_PROJECT} -f {config.SUBMIT_PATH + submit_filename} -m 'submit file: {submit_filename}")
     pass
 
 
 
+def predict(model, test):
+    y_pred = []
+    features = test.columns
 
-def run(modelname, input_file):
-    logger = logging.getLogger(__name__)
-    logger.info(f'INIT: predict {modelname} model')
+    if hasattr(model, 'predict_proba'):
+        y_pred = model.predict_proba(test)[:,1] # classification
 
-        # load train and validation datasets
-        test = load_data(input_file)   
+    else:
+        y_pred = model.predict(test) # regression
 
-        logger.info(f'RUN: loading model: {modelname}')
-        # fetch the model from model_dispatcher
-        model = load_model(modelname)
+    test["prediction"] = y_pred 
 
-        logger.info(f'RUN: predic model: {modelname}')
-        y_pred = []
-
-
-        if hasattr(model, 'predict_proba'):
-            y_pred = model.predict_proba(test)[:,1] # classification
-
-        else:
-            y_pred = model.predict(test) # regression
-
-
-
-        
-        logger.info(f'SAVE PREDICTION: {modelname}' )
-        save_predic_proba(y_pred, modelname, test)
-
-        
-        logger.info(f'END: predict {model} model' )
+    test.drop(features, axis=1, inplace=True)
        
-    pass
+    return test
 
 
 if __name__ == "__main__":
@@ -123,8 +96,6 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format=log_fmt)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument( "--kind",   required=True, 
-        help="Specify if problem will be a classification or regression. Values: 'classification' or 'regression'", type=str )
     parser.add_argument( "--model",  required=True, 
         help="Select kind of model to be used to score from model_dispatcher. Ex: 'rf' equal to Random Forest", type=str )
     
@@ -132,8 +103,39 @@ if __name__ == "__main__":
         help="Specify file name without extension who will be scored by model.", type=str)
     
     args = vars(parser.parse_args())
+        
+    modelname = args['model']
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"INIT: predict {modelname} model")
+
     
+    logger.info(f"RUN: loading {args['input_file']}")
 
-    assert args['kind'] in ['classification', 'regression'], f"'kind' should be 'classification' or 'regression'. {args['kind']} was provided"
+    # load train and validation datasets
+    test_df = load_data(config.INPUT_PATH + args['input_file'])   
+    test_df.set_index(config.KEY_ID, inplace=True)
+    test_df = test_df[['limit_bal', 'sex', 'education', 'marriage', 'age', 'pay_0',
+       'pay_2', 'pay_3', 'pay_4', 'pay_5', 'pay_6', 'bill_amt2', 'bill_amt4',
+       'bill_amt6', 'pay_amt1', 'pay_amt2', 'pay_amt3', 'pay_amt4', 'pay_amt5',
+       'pay_amt6', 'pastpayment_acum', 'bill_amount_acum', 'tend_bill_amt5',
+       'tend_bill_amt4', 'tend_bill_amt3', 'tend_bill_amt2', 'tend_bill_amt1',
+       'payment_amount_acum', 'tend_pay_amt5', 'tend_pay_amt4',
+       'tend_pay_amt3', 'tend_pay_amt2', 'tend_pay_amt1']]
 
-    run(kind=args['kind'], model=args['model'], input_file=args['input_file'])
+
+    logger.info(f"RUN: loading model: {modelname}")
+        
+    # fetch the model from model_dispatcher
+    model = load_model(modelname)
+
+    logger.info(f"RUN: predic model: {type(model).__name__}")
+
+    submit_df = predict(model, test_df)
+
+
+    logger.info(f"SAVE PREDICTION: {modelname}")
+
+    submit("submission", submit_df)
+        
+    logger.info(f'END: predict {modelname} model' )
